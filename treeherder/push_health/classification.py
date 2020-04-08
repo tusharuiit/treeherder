@@ -1,6 +1,9 @@
+from itertools import groupby
+
 # Grouping names/keys for failures.
 KNOWN_ISSUES = 'knownIssues'
-NEED_INVESTIGATION = 'needInvestigation'
+LIKELY_REGRESSION = 'likelyRegression'
+LIKELY_INTERMITTENT = 'likelyIntermittent'
 
 
 def set_classifications(failures, intermittent_history, fixed_by_commit_history):
@@ -68,10 +71,14 @@ def get_log_lines(failure):
 
 def get_grouped(failures):
     classified = {
-        NEED_INVESTIGATION: [],
+        LIKELY_INTERMITTENT: [],
+        LIKELY_REGRESSION: [],
         KNOWN_ISSUES: [],
     }
 
+    # The need_investigation bucket will be split into two sections afterward,
+    # based on the frequency of the failures.
+    need_investigation = []
     for failure in failures:
         is_intermittent = failure['suggestedClassification'] == 'intermittent'
 
@@ -81,8 +88,17 @@ def get_grouped(failures):
         elif failure['failedInParent']:
             classified[KNOWN_ISSUES].append(failure)
         else:
-            classified[NEED_INVESTIGATION].append(failure)
+            need_investigation.append(failure)
             # If it needs investigation, we, by definition, don't have 100% confidence.
             failure['confidence'] = min(failure['confidence'], 90)
+
+    likely_regression = []
+    likely_intermittent = []
+    for key, ni_group in groupby(need_investigation, lambda x: x['testName']):
+        area = likely_regression if len(list(ni_group)) > 2 else likely_intermittent
+        area.extend(list(ni_group))
+
+    classified[LIKELY_INTERMITTENT] = likely_intermittent
+    classified[LIKELY_REGRESSION] = likely_regression
 
     return classified

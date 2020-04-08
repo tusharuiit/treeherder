@@ -2,7 +2,7 @@ import logging
 
 from treeherder.config import settings
 from treeherder.model.models import Push
-from treeherder.push_health.classification import NEED_INVESTIGATION
+from treeherder.push_health.classification import LIKELY_REGRESSION, LIKELY_INTERMITTENT
 from treeherder.utils.http import make_request
 from treeherder.webapp.api.serializers import PushSerializer
 
@@ -18,7 +18,7 @@ def get_peak(facet):
             peak = max
             date = item['endTimeSeconds']
 
-    return {NEED_INVESTIGATION: peak, 'time': date}
+    return {'needsInvestigation': peak, 'time': date}
 
 
 def get_latest(facet):
@@ -26,7 +26,7 @@ def get_latest(facet):
         if item['inspectedCount'] > 0:
             latest = item['results'][-1]
             return {
-                NEED_INVESTIGATION: latest['max'],
+                'needsInvestigation': latest['max'],
                 'time': item['endTimeSeconds']
             }
 

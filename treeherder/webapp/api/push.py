@@ -222,7 +222,8 @@ class PushViewSet(viewsets.ViewSet):
 
         return Response({
             'needInvestigation':
-                len(push_health_test_failures['needInvestigation']) +
+                len(push_health_test_failures['likelyRegression']) +
+                len(push_health_test_failures['likelyIntermittent']) +
                 len(push_health_build_failures) +
                 len(push_health_lint_failures),
             'unsupported': len(push_health_test_failures['unsupported']),
@@ -258,10 +259,12 @@ class PushViewSet(viewsets.ViewSet):
                 parent_push = commit_history_details.pop('parentPush')
 
         push_health_test_failures = get_test_failures(push, parent_push)
+        len_need_investigation = (len(push_health_test_failures['likelyRegression']) +
+                                 len(push_health_test_failures['likelyIntermittent']))
         test_result = 'pass'
         if len(push_health_test_failures['unsupported']):
             test_result = 'indeterminate'
-        if len(push_health_test_failures['needInvestigation']):
+        if len_need_investigation:
             test_result = 'fail'
 
         build_failures = get_build_failures(push, parent_push)
@@ -280,7 +283,7 @@ class PushViewSet(viewsets.ViewSet):
         newrelic.agent.record_custom_event('push_health_need_investigation', {
             'revision': revision,
             'repo': repository.name,
-            'needInvestigation': len(push_health_test_failures['needInvestigation']),
+            'needInvestigation': len_need_investigation,
             'unsupported': len(push_health_test_failures['unsupported']),
             'author': push.author,
         })

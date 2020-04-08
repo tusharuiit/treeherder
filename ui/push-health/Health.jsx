@@ -187,7 +187,8 @@ export default class Health extends React.PureComponent {
       details: [],
     };
     const needInvestigationCount = tests
-      ? tests.details.needInvestigation.length
+      ? tests.details.likelyIntermittent.length +
+        tests.details.likelyRegression.length
       : 0;
 
     return (

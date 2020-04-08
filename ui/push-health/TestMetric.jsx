@@ -21,13 +21,24 @@ export default class TestMetric extends React.PureComponent {
       showParentMatches,
     } = this.props;
     const { name, result, details } = data;
-    const { needInvestigation, knownIssues, unsupported } = details;
-    let filteredNeedInvestigation = needInvestigation;
+    const {
+      likelyRregressions,
+      likelyIntermittents,
+      knownIssues,
+      unsupported,
+    } = details;
+    let filteredLikelyIntermittents = likelyIntermittents;
+    let filteredLikelyRegressions = likelyRregressions;
     let filteredIntermittent = knownIssues;
 
     if (searchStr.length || !showParentMatches) {
-      filteredNeedInvestigation = filterTests(
-        needInvestigation,
+      filteredLikelyIntermittents = filterTests(
+        likelyIntermittents,
+        searchStr,
+        showParentMatches,
+      );
+      filteredLikelyRegressions = filterTests(
+        likelyRregressions,
         searchStr,
         showParentMatches,
       );
@@ -47,16 +58,31 @@ export default class TestMetric extends React.PureComponent {
       >
         <div className="border-bottom border-secondary">
           <ClassificationGroup
-            group={filteredNeedInvestigation}
-            name="Need Investigation"
+            group={filteredLikelyRegressions}
+            name="Likely Regressions"
             repo={repo}
             currentRepo={currentRepo}
             revision={revision}
             className="mb-5"
             headerColor={
-              filteredNeedInvestigation.length ? 'danger' : 'darker-secondary'
+              filteredLikelyRegressions.length ? 'danger' : 'darker-secondary'
             }
-            unfilteredLength={needInvestigation.length}
+            unfilteredLength={filteredLikelyRegressions.length}
+            user={user}
+            hasRetriggerAll
+            notify={notify}
+          />
+          <ClassificationGroup
+            group={filteredLikelyIntermittents}
+            name="Likely Intermittents"
+            repo={repo}
+            currentRepo={currentRepo}
+            revision={revision}
+            className="mb-5"
+            headerColor={
+              filteredLikelyIntermittents.length ? 'danger' : 'darker-secondary'
+            }
+            unfilteredLength={filteredLikelyIntermittents.length}
             user={user}
             hasRetriggerAll
             notify={notify}
