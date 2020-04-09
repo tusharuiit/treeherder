@@ -316,7 +316,7 @@ class PushViewSet(viewsets.ViewSet):
                 'mozci': {
                     'name': 'Mozci',
                     'result': 'fail',
-                    'details': [t for t in mozciPush.tasks if t.failed]
+                    'details': [t.label for t in mozciPush.tasks if t.failed]
                 }
             },
             'status': push.get_status(),
