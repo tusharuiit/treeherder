@@ -8,6 +8,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.status import (HTTP_400_BAD_REQUEST,
                                    HTTP_404_NOT_FOUND)
+from mozci.push import Push as MozciPush
 
 from treeherder.model.models import (Job,
                                      JobType,
@@ -250,6 +251,8 @@ class PushViewSet(viewsets.ViewSet):
         commit_history_details = None
         parent_push = None
 
+        mozciPush = MozciPush([revision], project)
+
         # Parent compare only supported for Hg at this time.
         # Bug https://bugzilla.mozilla.org/show_bug.cgi?id=1612645
         if repository.dvcs_type == 'hg':
@@ -310,6 +313,11 @@ class PushViewSet(viewsets.ViewSet):
                     'result': build_result,
                     'details': build_failures,
                 },
+                'mozci': {
+                    'name': 'Mozci',
+                    'result': 'fail',
+                    'details': [t for t in mozciPush.tasks if t.failed]
+                }
             },
             'status': push.get_status(),
         })
